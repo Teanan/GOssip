@@ -26,9 +26,10 @@ func main() {
 	commandProcessor := chat.NewCommandProcessor(peersMap)
 
 	peersMapChannel := make(chan map[string]network.Peer)
+	usernameChannel := make(chan string)
 
-	go network.Listen(port, peersMap, &chat.MessageReceiver{})
-	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel)
+	go network.Listen(port, peersMap, chat.NewMessageReceiver(peersMap))
+	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel, usernameChannel)
 
 	stdin := make(chan string)
 	go readStdin(stdin)
@@ -47,6 +48,9 @@ func main() {
 
 		case newMap := <-peersMapChannel: // New peers list from discovery server
 			peersMap.SetAll(newMap)
+
+		case name := <-usernameChannel: // Assigned username from discovery server
+			commandProcessor.SetUsername(name)
 
 		}
 

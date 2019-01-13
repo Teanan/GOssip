@@ -13,13 +13,15 @@ var (
 	peers                map[string]Peer
 	peersMapChannel      chan map[string]Peer
 	chatPort             int
+	usernameChannel      chan string
 )
 
 // ConnectToDirectory ...
-func ConnectToDirectory(directoryServer string, directoryPort int, localChatPort int, peersMap chan map[string]Peer) {
+func ConnectToDirectory(directoryServer string, directoryPort int, localChatPort int, peersMap chan map[string]Peer, usernameChan chan string) {
 	peersMapChannel = peersMap
 	peers = make(map[string]Peer)
 	chatPort = localChatPort
+	usernameChannel = usernameChan
 
 	conn, err := net.Dial("tcp", directoryServer+":"+strconv.Itoa(directoryPort))
 	if err != nil {
@@ -66,6 +68,9 @@ func listenFromDirectory(conn net.Conn) {
 		case "NAME":
 			handleName(message.Data)
 
+		case "WELCOME":
+			handleWelcome(message.Data)
+
 		default:
 			fmt.Println("Unknown message kind :", message)
 		}
@@ -91,7 +96,7 @@ func handlePeers(sList string) {
 		_, found := newPeersList[addr]
 		if !found {
 			fmt.Println(peers[addr], "left the chat")
-			delete(newPeersList, addr)
+			delete(peers, addr)
 		}
 	}
 
@@ -131,6 +136,15 @@ func handleName(data string) {
 	fmt.Println(peers[addr], "is now", peer)
 
 	peers[addr] = peer
+}
+
+func handleWelcome(data string) {
+	if len(strings.Split(data, " ")) != 1 {
+		fmt.Println("Invalid WELCOME message", data)
+		return
+	}
+
+	usernameChannel <- data
 }
 
 func send(conn net.Conn, msgType string, data string) (int, error) {

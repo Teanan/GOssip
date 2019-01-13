@@ -32,3 +32,7 @@ func (p Peer) FullAddress() string {
 func (p Peer) Name() string {
 	return p.name
 }
+
+func (p *Peer) SetName(name string) {
+	p.name = name
+}

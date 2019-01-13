@@ -7,23 +7,38 @@ import (
 )
 
 type MessageReceiver struct {
+	peers *peersMap
 }
 
 func (receiver *MessageReceiver) Receive(message network.Message, from network.Peer) {
 	switch message.Kind {
 	case "SAY":
-		handleSay(message.Data, from)
+		receiver.handleSay(message.Data, from)
 	case "SAYTO":
-		handleSayTo(message.Data, from)
+		receiver.handleSayTo(message.Data, from)
+	case "NAME":
+		receiver.handleName(message.Data, from)
 	default:
 		fmt.Println("Unknown message kind :", message)
 	}
 }
 
-func handleSay(data string, from network.Peer) {
+func (receiver *MessageReceiver) handleSay(data string, from network.Peer) {
 	fmt.Println("[", from, "] ", data)
 }
 
-func handleSayTo(data string, from network.Peer) {
+func (receiver *MessageReceiver) handleSayTo(data string, from network.Peer) {
 	fmt.Println("/", from, "/ ", data)
+}
+
+func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
+	fmt.Println(from.Name(), " is now known as ", data)
+	from.SetName(data)
+	receiver.peers.Set(from.FullAddress(), from)
+}
+
+func NewMessageReceiver(peers *peersMap) *MessageReceiver {
+	return &MessageReceiver{
+		peers: peers,
+	}
 }

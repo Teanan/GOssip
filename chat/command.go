@@ -8,7 +8,8 @@ import (
 )
 
 type commandProcessor struct {
-	peers *peersMap
+	peers    *peersMap
+	username string
 }
 
 func (processor *commandProcessor) Process(command string) {
@@ -18,12 +19,14 @@ func (processor *commandProcessor) Process(command string) {
 		commandName := strings.SplitN(command, " ", 2)[0]
 		commandParams := ""
 		if len(strings.SplitN(command, " ", 2)) > 1 {
-			commandParams = strings.SplitN(command, " ", 2)[1]
+			commandParams = strings.TrimSpace(strings.SplitN(command, " ", 2)[1])
 		}
 
 		switch commandName {
 		case "/say":
 			processor.say(commandParams)
+		case "/name":
+			processor.name(commandParams)
 		default:
 			fmt.Print("Unknown command", commandName)
 		}
@@ -54,6 +57,24 @@ func (processor *commandProcessor) say(commandParams string) {
 		Kind: "SAYTO",
 		Data: text,
 	})
+}
+
+func (processor *commandProcessor) name(commandParams string) {
+	if commandParams == "" || len(strings.Split(commandParams, " ")) != 1 {
+		fmt.Println("Usage: /name new_username")
+		return
+	}
+
+	processor.peers.SendToAll(network.Message{
+		Kind: "NAME",
+		Data: commandParams,
+	})
+
+	processor.username = commandParams
+}
+
+func (processor *commandProcessor) SetUsername(name string) {
+	processor.username = name
 }
 
 func NewCommandProcessor(peers *peersMap) *commandProcessor {

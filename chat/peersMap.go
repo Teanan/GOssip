@@ -10,6 +10,10 @@ func (pmap *peersMap) Get(addr string) network.Peer {
 	return pmap.peers[addr]
 }
 
+func (pmap *peersMap) Set(addr string, peer network.Peer) {
+	pmap.peers[addr] = peer
+}
+
 func (pmap *peersMap) Find(address string) (bool, network.Peer) {
 	for addr, peer := range pmap.peers {
 		if addr == address {

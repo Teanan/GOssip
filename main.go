@@ -24,19 +24,6 @@ func main() {
 
 	fmt.Println("Listening on port", port)
 
-	peersMap := chat.NewPeersMap()
-	commandProcessor := chat.NewCommandProcessor(peersMap)
-
-	peersMapChannel := make(chan map[string]network.Peer)
-	usernameChannel := make(chan string)
-	incomingChannel := make(chan string)
-
-	go network.Listen(port, peersMap, chat.NewMessageReceiver(peersMap, incomingChannel))
-	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel, usernameChannel)
-
-	stdin := make(chan string)
-	go readStdin(stdin)
-
 	browserPort := 13000 + rand.Intn(1000)
 	webpage, err := browser.Connect("localhost", browserPort)
 	if err != nil {
@@ -45,10 +32,18 @@ func main() {
 	}
 	fmt.Println("Successfuly connected to browser webpage")
 
-	// Version sans channels (callback traditionnel + fonction d'envoi de messages)
-	// webpage.OnReceiveMessage(func(message string) {
-	// 	webpage.SendMessage("Received : " + message)
-	// })
+	peersMapChannel := make(chan map[string]network.Peer)
+	usernameChannel := make(chan string)
+	messageOutputChannel := make(chan string)
+
+	peersMap := chat.NewPeersMap()
+	commandProcessor := chat.NewCommandProcessor(peersMap, messageOutputChannel)
+
+	go network.Listen(port, peersMap, chat.NewMessageReceiver(peersMap, messageOutputChannel))
+	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel, usernameChannel)
+
+	stdin := make(chan string)
+	go readStdin(stdin)
 
 loop:
 	for {
@@ -69,12 +64,13 @@ loop:
 		case name := <-usernameChannel: // Assigned username from discovery server
 			peersMap.SetLocalUsername(name)
 
-		case messageFromBrowser := <-webpage.Receive():
-			webpage.Send() <- "[YOURSELF] " + messageFromBrowser
+		case messageFromBrowser := <-webpage.ReceiveChannel():
+			messageOutputChannel <- "[YOU] " + messageFromBrowser
 			commandProcessor.Process(messageFromBrowser)
 
-		case incoming := <-incomingChannel:
-			webpage.Send() <- incoming
+		case message := <-messageOutputChannel:
+			fmt.Println(message)
+			webpage.SendChannel() <- message
 
 		case <-webpage.Disconnected:
 			fmt.Println("Browser webpage has disconnected")

@@ -8,7 +8,8 @@ import (
 )
 
 type commandProcessor struct {
-	peers *peersMap
+	peers         *peersMap
+	messageOutput chan<- string
 }
 
 func (processor *commandProcessor) Process(command string) {
@@ -39,7 +40,7 @@ func (processor *commandProcessor) Process(command string) {
 
 func (processor *commandProcessor) say(commandParams string) {
 	if len(strings.SplitN(commandParams, " ", 2)) != 2 {
-		fmt.Println("Usage: /say username message")
+		processor.messageOutput <- fmt.Sprint("Usage: /say username message")
 		return
 	}
 
@@ -48,7 +49,7 @@ func (processor *commandProcessor) say(commandParams string) {
 	ok, peer := processor.peers.FindByName(userName)
 
 	if !ok {
-		fmt.Println("Cannot find user", userName)
+		processor.messageOutput <- fmt.Sprint("Cannot find user", userName)
 		return
 	}
 
@@ -60,12 +61,12 @@ func (processor *commandProcessor) say(commandParams string) {
 
 func (processor *commandProcessor) name(commandParams string) {
 	if commandParams == "" || len(strings.Split(commandParams, " ")) != 1 {
-		fmt.Println("Usage: /name new_username")
+		processor.messageOutput <- fmt.Sprint("Usage: /name new_username")
 		return
 	}
 
 	if found, _ := processor.peers.FindByName(commandParams); found {
-		fmt.Println("Username already taken")
+		processor.messageOutput <- fmt.Sprint("Username already taken")
 		return
 	}
 
@@ -77,8 +78,9 @@ func (processor *commandProcessor) name(commandParams string) {
 	processor.peers.SetLocalUsername(commandParams)
 }
 
-func NewCommandProcessor(peers *peersMap) *commandProcessor {
+func NewCommandProcessor(peers *peersMap, messageOutput chan<- string) *commandProcessor {
 	return &commandProcessor{
-		peers: peers,
+		peers:         peers,
+		messageOutput: messageOutput,
 	}
 }

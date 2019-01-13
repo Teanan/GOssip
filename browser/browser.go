@@ -140,13 +140,13 @@ func (wpage *Webpage) OnReceiveMessage(callback func(string)) {
 	wpage.receiveCallback = callback
 }
 
-// Receive gets the read-only channel used to read data from the browser
-func (wpage *Webpage) Receive() <-chan string {
+// ReceiveChannel returns a channel used to read data from the browser
+func (wpage *Webpage) ReceiveChannel() <-chan string {
 	return wpage.receive
 }
 
-// Send gets the write-only channel used to send data to the browser
-func (wpage *Webpage) Send() chan<- string {
+// SendChannel returns a channel used to send data to the browser
+func (wpage *Webpage) SendChannel() chan<- string {
 	return wpage.send
 }
 

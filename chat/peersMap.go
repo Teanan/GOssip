@@ -2,10 +2,6 @@ package chat
 
 import "github.com/teanan/GOssip/network"
 
-var (
-	Peers peersMap
-)
-
 type peersMap struct {
 	peers map[string]network.Peer
 }
@@ -23,13 +19,23 @@ func (pmap *peersMap) Find(address string) (bool, network.Peer) {
 	return false, network.Peer{}
 }
 
-func (pmap *peersMap) SendToAll(text string) {
+func (pmap *peersMap) FindByName(name string) (bool, network.Peer) {
 	for _, peer := range pmap.peers {
-		peer.Send <- network.Message{
-			Kind: "SAY",
-			Data: text,
+		if peer.Name() == name {
+			return true, peer
 		}
 	}
+	return false, network.Peer{}
+}
+
+func (pmap *peersMap) SendToAll(msg network.Message) {
+	for _, peer := range pmap.peers {
+		peer.Send <- msg
+	}
+}
+
+func (pmap *peersMap) SendTo(peer network.Peer, msg network.Message) {
+	peer.Send <- msg
 }
 
 func (pmap *peersMap) SetAll(newMap map[string]network.Peer) {

@@ -23,6 +23,7 @@ func main() {
 	fmt.Println("Listening on port", port)
 
 	peersMap := chat.NewPeersMap()
+	commandProcessor := chat.NewCommandProcessor(peersMap)
 
 	peersMapChannel := make(chan map[string]network.Peer)
 
@@ -36,13 +37,13 @@ func main() {
 
 		select {
 
-		case text, ok := <-stdin: // New message from stdin
+		case text, ok := <-stdin: // New command from stdin
 
 			if !ok {
 				return
 			}
 
-			peersMap.SendToAll(text)
+			commandProcessor.Process(text)
 
 		case newMap := <-peersMapChannel: // New peers list from discovery server
 			peersMap.SetAll(newMap)

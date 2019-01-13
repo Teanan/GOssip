@@ -28,3 +28,7 @@ func (p Peer) String() string {
 func (p Peer) FullAddress() string {
 	return p.address + ":" + strconv.Itoa(p.port)
 }
+
+func (p Peer) Name() string {
+	return p.name
+}

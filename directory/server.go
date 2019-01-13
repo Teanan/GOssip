@@ -44,7 +44,7 @@ func listen(port int) {
 			peers[conn.RemoteAddr().String()] = Peer{
 				conn:        conn,
 				address:     conn.RemoteAddr().String(),
-				pseudo:      "Guest #" + strconv.Itoa(guestNum),
+				pseudo:      "Guest#" + strconv.Itoa(guestNum),
 				chatPort:    0,
 				chatAddress: "?",
 			}

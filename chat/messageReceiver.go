@@ -13,6 +13,8 @@ func (receiver *MessageReceiver) Receive(message network.Message, from network.P
 	switch message.Kind {
 	case "SAY":
 		handleSay(message.Data, from)
+	case "SAYTO":
+		handleSayTo(message.Data, from)
 	default:
 		fmt.Println("Unknown message kind :", message)
 	}
@@ -20,4 +22,8 @@ func (receiver *MessageReceiver) Receive(message network.Message, from network.P
 
 func handleSay(data string, from network.Peer) {
 	fmt.Println("[", from, "] ", data)
+}
+
+func handleSayTo(data string, from network.Peer) {
+	fmt.Println("/", from, "/ ", data)
 }

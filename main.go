@@ -69,7 +69,6 @@ loop:
 			peersMap.SetLocalUsername(name)
 
 		case messageFromBrowser := <-webpage.ReceiveChannel():
-			messageOutputChannel <- "[YOU] " + messageFromBrowser
 			commandProcessor.Process(messageFromBrowser)
 
 		case message := <-messageOutputChannel:

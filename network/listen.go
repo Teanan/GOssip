@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type MessageReceiver interface {
@@ -39,15 +40,14 @@ func handleConnection(conn net.Conn, peers PeersMap, messageReceiver MessageRece
 		}
 
 		if message.Kind == "HELLO" {
-			handleHello(message.Data, conn, peers, &remotePeerAddress)
-			messageReceiver.HandleHello(message.Data, peers.Get(remotePeerAddress))
+			handleHello(message.Data, conn, peers, &remotePeerAddress, messageReceiver, 5)
 		} else {
 			messageReceiver.Receive(message, peers.Get(remotePeerAddress))
 		}
 	}
 }
 
-func handleHello(data string, conn net.Conn, peers PeersMap, remotePeerAddress *string) {
+func handleHello(data string, conn net.Conn, peers PeersMap, remotePeerAddress *string, messageReceiver MessageReceiver, retries int) {
 	port, err := strconv.Atoi(strings.TrimSpace(data))
 
 	if err != nil {
@@ -60,11 +60,20 @@ func handleHello(data string, conn net.Conn, peers PeersMap, remotePeerAddress *
 	found, p := peers.Find(addr)
 
 	if !found {
-		fmt.Println("Unknown peer", addr)
+		if retries == 0 {
+			fmt.Println("Unknown peer", addr)
+		} else {
+			go func() {
+				time.Sleep(1 * time.Second)
+				handleHello(data, conn, peers, remotePeerAddress, messageReceiver, retries-1)
+			}()
+		}
 		return
 	}
 
 	*remotePeerAddress = p.FullAddress()
 
 	fmt.Println("Identified", conn.RemoteAddr(), "as", p)
+
+	messageReceiver.HandleHello(data, peers.Get(*remotePeerAddress))
 }

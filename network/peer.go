@@ -36,3 +36,11 @@ func (p Peer) Name() string {
 func (p *Peer) SetName(name string) {
 	p.name = name
 }
+
+func CreatePeer(addr string, port int) Peer {
+	return Peer{
+		address: addr,
+		port:    port,
+		Send:    make(chan Message),
+	}
+}

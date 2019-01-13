@@ -13,16 +13,21 @@ import (
 	"github.com/teanan/GOssip/network"
 )
 
+var (
+	chatPort        int
+	directoryPort   = 8080
+	directoryServer = "127.0.0.1"
+
+	messageOutputChannel = make(chan string, 5)
+)
+
 func main() {
 	fmt.Println("== GOssip ==")
 
 	rand.Seed(time.Now().UnixNano())
-	port := 9000 + rand.Intn(1000)
+	chatPort = 9000 + rand.Intn(1000)
 
-	directoryPort := 8080
-	directoryServer := "127.0.0.1"
-
-	fmt.Println("Listening on port", port)
+	fmt.Println("Listening on port", chatPort)
 
 	browserPort := 13000 + rand.Intn(1000)
 	webpage, err := browser.Connect("localhost", browserPort)
@@ -32,15 +37,14 @@ func main() {
 	}
 	fmt.Println("Successfuly connected to browser webpage")
 
-	peersMapChannel := make(chan map[string]network.Peer)
-	usernameChannel := make(chan string)
-	messageOutputChannel := make(chan string)
+	peersListChannel := make(chan map[string]string, 5)
+	usernameChannel := make(chan string, 5)
 
 	peersMap := chat.NewPeersMap()
 	commandProcessor := chat.NewCommandProcessor(peersMap, messageOutputChannel)
 
-	go network.Listen(port, peersMap, chat.NewMessageReceiver(peersMap, messageOutputChannel))
-	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel, usernameChannel)
+	go network.Listen(chatPort, peersMap, chat.NewMessageReceiver(peersMap, messageOutputChannel))
+	go network.ConnectToDirectory(directoryServer, directoryPort, chatPort, peersListChannel, usernameChannel)
 
 	stdin := make(chan string)
 	go readStdin(stdin)
@@ -58,8 +62,8 @@ loop:
 
 			commandProcessor.Process(text)
 
-		case newMap := <-peersMapChannel: // New peers list from discovery server
-			peersMap.SetAll(newMap)
+		case newList := <-peersListChannel: // New peers list from discovery server
+			peersMap.SetNewPeersList(newList, onPeerConnected, onPeerDisconnected)
 
 		case name := <-usernameChannel: // Assigned username from discovery server
 			peersMap.SetLocalUsername(name)
@@ -77,6 +81,15 @@ loop:
 			break loop
 		}
 	}
+}
+
+func onPeerConnected(peer network.Peer) {
+	messageOutputChannel <- fmt.Sprint(peer, " joined the chat")
+	go network.Dial(peer, chatPort)
+}
+
+func onPeerDisconnected(peer network.Peer) {
+	messageOutputChannel <- fmt.Sprint(peer, " left the chat")
 }
 
 func readStdin(ch chan string) {

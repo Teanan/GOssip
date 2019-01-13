@@ -41,6 +41,7 @@ func createMessage(raw string) (Message, error) {
 }
 
 func (m Message) Send(conn net.Conn) error {
+	fmt.Println("Sent :", m)
 	_, err := conn.Write([]byte(m.Kind + " " + strings.TrimSpace(m.Data) + "\n"))
 	return err
 }

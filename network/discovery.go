@@ -10,16 +10,16 @@ import (
 
 var (
 	connectedToDirectory = false
-	peers                map[string]Peer
-	peersMapChannel      chan map[string]Peer
+	peers                map[string]string
+	peersMapChannel      chan map[string]string
 	chatPort             int
 	usernameChannel      chan string
 )
 
 // ConnectToDirectory ...
-func ConnectToDirectory(directoryServer string, directoryPort int, localChatPort int, peersMap chan map[string]Peer, usernameChan chan string) {
+func ConnectToDirectory(directoryServer string, directoryPort int, localChatPort int, peersMap chan map[string]string, usernameChan chan string) {
 	peersMapChannel = peersMap
-	peers = make(map[string]Peer)
+	peers = make(map[string]string)
 	chatPort = localChatPort
 	usernameChannel = usernameChan
 
@@ -88,37 +88,16 @@ func handlePeers(sList string) {
 		if len(strings.SplitN(addr, ":", 2)) != 2 {
 			continue
 		}
-		newPeersList[addr] = addr
-	}
-
-	// remove peers that are no longer present
-	for addr := range peers {
-		_, found := newPeersList[addr]
-		if !found {
-			fmt.Println(peers[addr], "left the chat")
-			delete(peers, addr)
+		if _, found := peers[addr]; found {
+			newPeersList[addr] = peers[addr]
+		} else {
+			newPeersList[addr] = addr
+			peers[addr] = newPeersList[addr]
 		}
 	}
 
-	// add new peers
-	for _, addr := range newPeersList {
-		_, found := peers[addr]
-		if found {
-			continue
-		}
-
-		port, _ := strconv.Atoi(strings.SplitN(addr, ":", 2)[1])
-		peer := Peer{
-			address: strings.SplitN(addr, ":", 2)[0],
-			port:    port,
-			Send:    make(chan Message),
-		}
-		peers[addr] = peer
-		fmt.Println(peers[addr], "joined the chat")
-		go Dial(peer, chatPort)
-	}
-
-	peersMapChannel <- peers
+	peersMapChannel <- newPeersList
+	peers = newPeersList
 }
 
 func handleName(data string) {
@@ -130,12 +109,11 @@ func handleName(data string) {
 
 	addr, newName := strings.TrimSpace(list[0]), strings.TrimSpace(list[1])
 
-	peer := peers[addr]
-	peer.name = newName
+	peers[addr] = newName
 
-	fmt.Println(peers[addr], "is now", peer)
+	fmt.Println(addr, "is now", peers[addr])
 
-	peers[addr] = peer
+	peersMapChannel <- peers
 }
 
 func handleWelcome(data string) {

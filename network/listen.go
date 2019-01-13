@@ -38,12 +38,28 @@ func handleConnection(conn net.Conn, peers PeersMap, messageReceiver MessageRece
 			fmt.Println("Failed to read message from peer", err)
 			return
 		}
+		fmt.Println("Got :", message)
 
 		if message.Kind == "HELLO" {
 			handleHello(message.Data, conn, peers, &remotePeerAddress, messageReceiver, 5)
 		} else {
-			messageReceiver.Receive(message, peers.Get(remotePeerAddress))
+			handleMessage(&remotePeerAddress, message, peers, messageReceiver, 5)
 		}
+	}
+}
+
+func handleMessage(remotePeerAddress *string, message Message, peers PeersMap, messageReceiver MessageReceiver, retries int) {
+	if ok, _ := peers.Find(*remotePeerAddress); !ok {
+		if retries == 0 {
+			fmt.Println("Got message", message, "from unknown peer", *remotePeerAddress)
+		} else {
+			go func() {
+				time.Sleep(1 * time.Second)
+				handleMessage(remotePeerAddress, message, peers, messageReceiver, retries-1)
+			}()
+		}
+	} else {
+		messageReceiver.Receive(message, peers.Get(*remotePeerAddress))
 	}
 }
 

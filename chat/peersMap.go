@@ -1,6 +1,11 @@
 package chat
 
-import "github.com/teanan/GOssip/network"
+import (
+	"strconv"
+	"strings"
+
+	"github.com/teanan/GOssip/network"
+)
 
 type peersMap struct {
 	peers         map[string]network.Peer
@@ -43,8 +48,31 @@ func (pmap *peersMap) SendTo(peer network.Peer, msg network.Message) {
 	peer.Send <- msg
 }
 
-func (pmap *peersMap) SetAll(newMap map[string]network.Peer) {
-	pmap.peers = newMap
+func (pmap *peersMap) SetNewPeersList(newList map[string]string, onPeerConnected func(network.Peer), onPeerDisconnected func(network.Peer)) {
+	// remove peers that are no longer present
+	for addr := range pmap.peers {
+		_, found := newList[addr]
+		if !found {
+			onPeerDisconnected(pmap.peers[addr])
+			delete(pmap.peers, addr)
+		}
+	}
+
+	// add new peers
+	for addr := range newList {
+		_, found := pmap.peers[addr]
+		if found {
+			continue
+		}
+
+		port, _ := strconv.Atoi(strings.SplitN(addr, ":", 2)[1])
+		peer := network.CreatePeer(
+			strings.SplitN(addr, ":", 2)[0],
+			port,
+		)
+		pmap.peers[addr] = peer
+		onPeerConnected(peer)
+	}
 }
 
 func (pmap *peersMap) SetLocalUsername(localUsername string) {

@@ -1,6 +1,8 @@
 package network
 
-import "strconv"
+import (
+	"strconv"
+)
 
 // Peer ...
 type Peer struct {
@@ -10,10 +12,19 @@ type Peer struct {
 	Send    chan Message
 }
 
+type PeersMap interface {
+	Get(address string) Peer
+	Find(address string) (bool, Peer)
+}
+
 func (p Peer) String() string {
 	if p.name != "" {
 		return p.name
 	} else {
 		return p.address + ":" + strconv.Itoa(p.port)
 	}
+}
+
+func (p Peer) FullAddress() string {
+	return p.address + ":" + strconv.Itoa(p.port)
 }

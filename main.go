@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/teanan/GOssip/chat"
 	"github.com/teanan/GOssip/network"
 )
 
@@ -21,17 +22,11 @@ func main() {
 
 	fmt.Println("Listening on port", port)
 
-	peersMapChannel := make(chan map[string]network.Peer)
-	peersMap := make(map[string]network.Peer)
+	peersMap := chat.NewPeersMap()
 
-	go network.Listen(port, func(address string) (bool, network.Peer) {
-		for addr, peer := range peersMap {
-			if addr == address {
-				return true, peer
-			}
-		}
-		return false, network.Peer{}
-	})
+	peersMapChannel := make(chan map[string]network.Peer)
+
+	go network.Listen(port, peersMap, &chat.MessageReceiver{})
 	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel)
 
 	stdin := make(chan string)
@@ -47,15 +42,10 @@ func main() {
 				return
 			}
 
-			for _, peer := range peersMap {
-				peer.Send <- network.Message{
-					"SAY",
-					text,
-				}
-			}
+			peersMap.SendToAll(text)
 
 		case newMap := <-peersMapChannel: // New peers list from discovery server
-			peersMap = newMap
+			peersMap.SetAll(newMap)
 
 		}
 

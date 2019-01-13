@@ -7,7 +7,8 @@ import (
 )
 
 type MessageReceiver struct {
-	peers *peersMap
+	peers    *peersMap
+	incoming chan string
 }
 
 func (receiver *MessageReceiver) Receive(message network.Message, from network.Peer) {
@@ -31,11 +32,11 @@ func (receiver *MessageReceiver) HandleHello(data string, from network.Peer) {
 }
 
 func (receiver *MessageReceiver) handleSay(data string, from network.Peer) {
-	fmt.Println("[", from, "] ", data)
+	receiver.incoming <- fmt.Sprint("[", from, "] ", data)
 }
 
 func (receiver *MessageReceiver) handleSayTo(data string, from network.Peer) {
-	fmt.Println("/", from, "/ ", data)
+	receiver.incoming <- fmt.Sprint("/", from, "/ ", data)
 }
 
 func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
@@ -44,17 +45,18 @@ func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
 	}
 
 	if found, _ := receiver.peers.FindByName(data); found || receiver.peers.GetLocalUsername() == data {
-		fmt.Println(from.Name(), "tried to use an already taken username")
+		receiver.incoming <- fmt.Sprint(from.Name(), "tried to use an already taken username")
 		return
 	}
 
-	fmt.Println(from.Name(), " is now known as ", data)
+	receiver.incoming <- fmt.Sprint(from.Name(), " is now known as ", data)
 	from.SetName(data)
 	receiver.peers.Set(from.FullAddress(), from)
 }
 
-func NewMessageReceiver(peers *peersMap) *MessageReceiver {
+func NewMessageReceiver(peers *peersMap, incoming chan string) *MessageReceiver {
 	return &MessageReceiver{
-		peers: peers,
+		peers:    peers,
+		incoming: incoming,
 	}
 }

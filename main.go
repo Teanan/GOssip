@@ -29,8 +29,9 @@ func main() {
 
 	peersMapChannel := make(chan map[string]network.Peer)
 	usernameChannel := make(chan string)
+	incomingChannel := make(chan string)
 
-	go network.Listen(port, peersMap, chat.NewMessageReceiver(peersMap))
+	go network.Listen(port, peersMap, chat.NewMessageReceiver(peersMap, incomingChannel))
 	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel, usernameChannel)
 
 	stdin := make(chan string)
@@ -68,9 +69,16 @@ func main() {
 			peersMap.SetLocalUsername(name)
 
 		case messageFromBrowser := <-webpage.Receive():
-			webpage.Send() <- "[Received] " + messageFromBrowser
-			// TODO : how to send the message to the peers ?
-			// TODO : how to receive messages from the peers ?
+			webpage.Send() <- "[YOURSELF] " + messageFromBrowser
+			commandProcessor.Process(messageFromBrowser)
+
+		case incoming := <-incomingChannel:
+			webpage.Send() <- incoming
+
+		// Makes the channel select non-blocking (constantly tests if)
+		default:
+			{
+			}
 		}
 
 	}

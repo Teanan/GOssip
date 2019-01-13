@@ -3,7 +3,8 @@ package chat
 import "github.com/teanan/GOssip/network"
 
 type peersMap struct {
-	peers map[string]network.Peer
+	peers         map[string]network.Peer
+	localUsername string
 }
 
 func (pmap *peersMap) Get(addr string) network.Peer {
@@ -44,6 +45,14 @@ func (pmap *peersMap) SendTo(peer network.Peer, msg network.Message) {
 
 func (pmap *peersMap) SetAll(newMap map[string]network.Peer) {
 	pmap.peers = newMap
+}
+
+func (pmap *peersMap) SetLocalUsername(localUsername string) {
+	pmap.localUsername = localUsername
+}
+
+func (pmap *peersMap) GetLocalUsername() string {
+	return pmap.localUsername
 }
 
 func NewPeersMap() *peersMap {

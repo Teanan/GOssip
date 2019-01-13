@@ -23,6 +23,13 @@ func (receiver *MessageReceiver) Receive(message network.Message, from network.P
 	}
 }
 
+func (receiver *MessageReceiver) HandleHello(data string, from network.Peer) {
+	receiver.peers.SendTo(from, network.Message{
+		Kind: "NAME",
+		Data: receiver.peers.GetLocalUsername(),
+	})
+}
+
 func (receiver *MessageReceiver) handleSay(data string, from network.Peer) {
 	fmt.Println("[", from, "] ", data)
 }
@@ -32,7 +39,11 @@ func (receiver *MessageReceiver) handleSayTo(data string, from network.Peer) {
 }
 
 func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
-	if found, _ := receiver.peers.FindByName(data); found {
+	if data == from.Name() {
+		return
+	}
+
+	if found, _ := receiver.peers.FindByName(data); found || receiver.peers.GetLocalUsername() == data {
 		fmt.Println(from.Name(), "tried to use an already taken username")
 		return
 	}

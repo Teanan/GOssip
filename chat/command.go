@@ -8,8 +8,7 @@ import (
 )
 
 type commandProcessor struct {
-	peers    *peersMap
-	username string
+	peers *peersMap
 }
 
 func (processor *commandProcessor) Process(command string) {
@@ -75,11 +74,7 @@ func (processor *commandProcessor) name(commandParams string) {
 		Data: commandParams,
 	})
 
-	processor.username = commandParams
-}
-
-func (processor *commandProcessor) SetUsername(name string) {
-	processor.username = name
+	processor.peers.SetLocalUsername(commandParams)
 }
 
 func NewCommandProcessor(peers *peersMap) *commandProcessor {

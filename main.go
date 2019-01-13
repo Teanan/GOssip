@@ -50,7 +50,7 @@ func main() {
 			peersMap.SetAll(newMap)
 
 		case name := <-usernameChannel: // Assigned username from discovery server
-			commandProcessor.SetUsername(name)
+			peersMap.SetLocalUsername(name)
 
 		}
 

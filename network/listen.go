@@ -9,6 +9,7 @@ import (
 
 type MessageReceiver interface {
 	Receive(Message, Peer)
+	HandleHello(data string, from Peer)
 }
 
 // Listen ...
@@ -39,6 +40,7 @@ func handleConnection(conn net.Conn, peers PeersMap, messageReceiver MessageRece
 
 		if message.Kind == "HELLO" {
 			handleHello(message.Data, conn, peers, &remotePeerAddress)
+			messageReceiver.HandleHello(message.Data, peers.Get(remotePeerAddress))
 		} else {
 			messageReceiver.Receive(message, peers.Get(remotePeerAddress))
 		}

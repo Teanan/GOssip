@@ -45,7 +45,7 @@ var connectedWebpage *Webpage
 
 // Webpage is a middleman between the websocket connection and Go.
 type Webpage struct {
-	IsConnected bool
+	Disconnected chan bool
 
 	receiveCallback func(string)
 
@@ -63,7 +63,7 @@ type Webpage struct {
 func (wpage *Webpage) receiveLoop() {
 	defer func() {
 		wpage.conn.Close()
-		wpage.IsConnected = false
+		wpage.Disconnected <- true
 	}()
 	wpage.conn.SetReadLimit(maxMessageSize)
 	wpage.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -91,7 +91,7 @@ func (wpage *Webpage) sendLoop() {
 	defer func() {
 		ticker.Stop()
 		wpage.conn.Close()
-		wpage.IsConnected = false
+		wpage.Disconnected <- true
 	}()
 	for {
 		select {
@@ -182,7 +182,7 @@ func serveWs(w http.ResponseWriter, r *http.Request, connected chan *Webpage) {
 		return
 	}
 
-	wpage := &Webpage{conn: conn, send: make(chan string, 256), receive: make(chan string, 256)}
+	wpage := &Webpage{conn: conn, send: make(chan string, 256), receive: make(chan string, 256), Disconnected: make(chan bool)}
 	go wpage.sendLoop()
 	go wpage.receiveLoop()
 
@@ -205,7 +205,6 @@ func Connect(host string, port int) (*Webpage, error) {
 	if connectedWebpage == nil {
 		return nil, errors.New("Couldn't connect to browser")
 	}
-	connectedWebpage.IsConnected = true
 
 	return connectedWebpage, nil
 }

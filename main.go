@@ -50,7 +50,8 @@ func main() {
 	// 	webpage.SendMessage("Received : " + message)
 	// })
 
-	for webpage.IsConnected {
+loop:
+	for {
 
 		select {
 
@@ -75,15 +76,11 @@ func main() {
 		case incoming := <-incomingChannel:
 			webpage.Send() <- incoming
 
-		// Makes the channel select non-blocking (constantly tests if)
-		default:
-			{
-			}
+		case <-webpage.Disconnected:
+			fmt.Println("Browser webpage has disconnected")
+			break loop
 		}
-
 	}
-
-	fmt.Println("Browser webpage has disconnected")
 }
 
 func readStdin(ch chan string) {

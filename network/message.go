@@ -40,6 +40,11 @@ func createMessage(raw string) (Message, error) {
 	}
 }
 
+func (m Message) Send(conn net.Conn) error {
+	_, err := conn.Write([]byte(m.Kind + " " + strings.TrimSpace(m.Data) + "\n"))
+	return err
+}
+
 func (m Message) String() string {
 	if m.Data != "" {
 		return fmt.Sprintf("[%s] %s", m.Kind, m.Data)

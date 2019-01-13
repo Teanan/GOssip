@@ -24,7 +24,14 @@ func main() {
 	peersMapChannel := make(chan map[string]network.Peer)
 	peersMap := make(map[string]network.Peer)
 
-	go network.Listen(port)
+	go network.Listen(port, func(address string) (bool, network.Peer) {
+		for addr, peer := range peersMap {
+			if addr == address {
+				return true, peer
+			}
+		}
+		return false, network.Peer{}
+	})
 	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel)
 
 	stdin := make(chan string)
@@ -41,7 +48,10 @@ func main() {
 			}
 
 			for _, peer := range peersMap {
-				peer.Send <- text
+				peer.Send <- network.Message{
+					"SAY",
+					text,
+				}
 			}
 
 		case newMap := <-peersMapChannel: // New peers list from discovery server

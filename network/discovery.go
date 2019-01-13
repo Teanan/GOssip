@@ -12,12 +12,14 @@ var (
 	connectedToDirectory = false
 	peers                map[string]Peer
 	peersMapChannel      chan map[string]Peer
+	chatPort             int
 )
 
 // ConnectToDirectory ...
-func ConnectToDirectory(directoryServer string, directoryPort int, chatPort int, peersMap chan map[string]Peer) {
+func ConnectToDirectory(directoryServer string, directoryPort int, localChatPort int, peersMap chan map[string]Peer) {
 	peersMapChannel = peersMap
 	peers = make(map[string]Peer)
+	chatPort = localChatPort
 
 	conn, err := net.Dial("tcp", directoryServer+":"+strconv.Itoa(directoryPort))
 	if err != nil {
@@ -104,11 +106,11 @@ func handlePeers(sList string) {
 		peer := Peer{
 			address: strings.SplitN(addr, ":", 2)[0],
 			port:    port,
-			Send:    make(chan string),
+			Send:    make(chan Message),
 		}
 		peers[addr] = peer
 		fmt.Println(peers[addr], "joined the chat")
-		go Dial(peer)
+		go Dial(peer, chatPort)
 	}
 
 	peersMapChannel <- peers

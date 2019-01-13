@@ -7,7 +7,7 @@ type Peer struct {
 	address string
 	port    int
 	name    string
-	Send    chan string
+	Send    chan Message
 }
 
 func (p Peer) String() string {

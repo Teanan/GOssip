@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"time"
 
+	"github.com/teanan/GOssip/browser"
 	"github.com/teanan/GOssip/chat"
 	"github.com/teanan/GOssip/network"
 )
@@ -34,7 +36,20 @@ func main() {
 	stdin := make(chan string)
 	go readStdin(stdin)
 
-	for {
+	browserPort := 13000 + rand.Intn(1000)
+	webpage, err := browser.Connect("localhost", browserPort)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	fmt.Println("Successfuly connected to browser webpage")
+
+	// Version sans channels (callback traditionnel + fonction d'envoi de messages)
+	// webpage.OnReceiveMessage(func(message string) {
+	// 	webpage.SendMessage("Received : " + message)
+	// })
+
+	for webpage.IsConnected {
 
 		select {
 
@@ -52,9 +67,15 @@ func main() {
 		case name := <-usernameChannel: // Assigned username from discovery server
 			peersMap.SetLocalUsername(name)
 
+		case messageFromBrowser := <-webpage.Receive():
+			webpage.Send() <- "[Received] " + messageFromBrowser
+			// TODO : how to send the message to the peers ?
+			// TODO : how to receive messages from the peers ?
 		}
 
 	}
+
+	fmt.Println("Browser webpage has disconnected")
 }
 
 func readStdin(ch chan string) {

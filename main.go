@@ -14,7 +14,10 @@ func main() {
 	fmt.Println("== GOssip ==")
 
 	rand.Seed(time.Now().UnixNano())
-	port := 8000 + rand.Intn(2000)
+	port := 9000 + rand.Intn(1000)
+
+	directoryPort := 8080
+	directoryServer := "127.0.0.1"
 
 	fmt.Println("Listening on port", port)
 
@@ -22,21 +25,42 @@ func main() {
 	peersMap := make(map[string]network.Peer)
 
 	go network.Listen(port)
-	go network.DiscoverLoop(port, peersMapChannel)
+	go network.ConnectToDirectory(directoryServer, directoryPort, port, peersMapChannel)
 
-	reader := bufio.NewReader(os.Stdin)
+	stdin := make(chan string)
+	go readStdin(stdin)
 
 	for {
 
 		select {
-		case newMap := <-peersMapChannel:
+
+		case text, ok := <-stdin: // New message from stdin
+
+			if !ok {
+				return
+			}
+
+			for _, peer := range peersMap {
+				peer.Send <- text
+			}
+
+		case newMap := <-peersMapChannel: // New peers list from discovery server
 			peersMap = newMap
+
 		}
 
-		text, _ := reader.ReadString('\n')
+	}
+}
 
-		for _, peer := range peersMap {
-			peer.Send <- text
+func readStdin(ch chan string) {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		s, err := reader.ReadString('\n')
+		if err != nil {
+			close(ch)
+			return
 		}
+		ch <- s
 	}
 }

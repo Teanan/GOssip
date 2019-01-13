@@ -13,12 +13,14 @@ func Listen(port int) {
 	if err != nil {
 		// handle error
 		fmt.Println("oh no!", err)
+		return
 	}
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			// handle error
 			fmt.Println("oh no!", err)
+			return
 		}
 		go handleConnection(conn)
 	}
@@ -30,6 +32,7 @@ func handleConnection(conn net.Conn) {
 		if err != nil {
 			// handle error
 			fmt.Println("oh no!", err)
+			return
 		}
 
 		fmt.Println(conn.RemoteAddr(), "said :", message)

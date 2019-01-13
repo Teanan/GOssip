@@ -65,6 +65,11 @@ func (processor *commandProcessor) name(commandParams string) {
 		return
 	}
 
+	if found, _ := processor.peers.FindByName(commandParams); found {
+		fmt.Println("Username already taken")
+		return
+	}
+
 	processor.peers.SendToAll(network.Message{
 		Kind: "NAME",
 		Data: commandParams,

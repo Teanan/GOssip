@@ -32,6 +32,11 @@ func (receiver *MessageReceiver) handleSayTo(data string, from network.Peer) {
 }
 
 func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
+	if found, _ := receiver.peers.FindByName(data); found {
+		fmt.Println(from.Name(), "tried to use an already taken username")
+		return
+	}
+
 	fmt.Println(from.Name(), " is now known as ", data)
 	from.SetName(data)
 	receiver.peers.Set(from.FullAddress(), from)

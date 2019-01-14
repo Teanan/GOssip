@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/teanan/GOssip/network"
+	"github.com/teanan/GOssip-TP/network"
 )
 
 type Peer struct {

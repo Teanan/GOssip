@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/teanan/GOssip/chat"
-	"github.com/teanan/GOssip/network"
+	"github.com/teanan/GOssip-TP/chat"
+	"github.com/teanan/GOssip-TP/network"
 )
 
 var (

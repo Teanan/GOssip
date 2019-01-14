@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/teanan/GOssip/network"
+	"github.com/teanan/GOssip-TP/network"
 )
 
 type MessageReceiver struct {

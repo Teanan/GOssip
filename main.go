@@ -27,6 +27,10 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	chatPort = 9000 + rand.Intn(1000)
 
+	if len(os.Args) > 1 {
+		directoryServer = os.Args[1]
+	}
+
 	fmt.Println("Listening on port", chatPort)
 
 	browserPort := 13000 + rand.Intn(1000)

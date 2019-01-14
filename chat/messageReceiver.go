@@ -2,6 +2,7 @@ package chat
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/teanan/GOssip/network"
 )
@@ -40,6 +41,10 @@ func (receiver *MessageReceiver) handleSayTo(data string, from network.Peer) {
 }
 
 func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
+	if strings.ContainsAny(data, "\t\r\n ") {
+		return
+	}
+
 	if data == from.Name() {
 		return
 	}

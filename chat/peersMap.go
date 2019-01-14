@@ -17,31 +17,21 @@ func (pmap *peersMap) Get(addr string) network.Peer {
 }
 
 func (pmap *peersMap) Set(addr string, peer network.Peer) {
-	pmap.peers[addr] = peer
+	// Question 1
 }
 
 func (pmap *peersMap) Find(address string) (bool, network.Peer) {
-	for addr, peer := range pmap.peers {
-		if addr == address {
-			return true, peer
-		}
-	}
+	// Question 1
 	return false, network.Peer{}
 }
 
 func (pmap *peersMap) FindByName(name string) (bool, network.Peer) {
-	for _, peer := range pmap.peers {
-		if peer.Name() == name {
-			return true, peer
-		}
-	}
+	// Question 3
 	return false, network.Peer{}
 }
 
 func (pmap *peersMap) SendToAll(msg network.Message) {
-	for _, peer := range pmap.peers {
-		peer.Send <- msg
-	}
+	// Question 1
 }
 
 func (pmap *peersMap) SendTo(peer network.Peer, msg network.Message) {

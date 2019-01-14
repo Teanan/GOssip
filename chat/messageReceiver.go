@@ -37,7 +37,7 @@ func (receiver *MessageReceiver) handleSay(data string, from network.Peer) {
 }
 
 func (receiver *MessageReceiver) handleSayTo(data string, from network.Peer) {
-	receiver.messageOutput <- fmt.Sprint("/", from, "/ ", data)
+	// question 5
 }
 
 func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
@@ -45,7 +45,7 @@ func (receiver *MessageReceiver) handleName(data string, from network.Peer) {
 		return
 	}
 
-	if data == from.Name() {
+	if data == from.String() {
 		return
 	}
 

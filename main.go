@@ -3,12 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"time"
 
-	"github.com/teanan/GOssip/browser"
 	"github.com/teanan/GOssip/chat"
 	"github.com/teanan/GOssip/network"
 )
@@ -33,6 +31,7 @@ func main() {
 
 	fmt.Println("Listening on port", chatPort)
 
+	/* Question 4
 	browserPort := 13000 + rand.Intn(1000)
 	webpage, err := browser.Connect("localhost", browserPort)
 	if err != nil {
@@ -40,6 +39,7 @@ func main() {
 		return
 	}
 	fmt.Println("Successfuly connected to browser webpage")
+	*/
 
 	peersListChannel := make(chan map[string]string, 5)
 	usernameChannel := make(chan string, 5)
@@ -53,7 +53,9 @@ func main() {
 	stdin := make(chan string)
 	go readStdin(stdin)
 
-loop:
+	/* Question 4
+	loop:
+	*/
 	for {
 
 		select {
@@ -72,27 +74,24 @@ loop:
 		case name := <-usernameChannel: // Assigned username from discovery server
 			peersMap.SetLocalUsername(name)
 
-		case messageFromBrowser := <-webpage.ReceiveChannel():
-			commandProcessor.Process(messageFromBrowser)
-
 		case message := <-messageOutputChannel:
 			fmt.Println(message)
-			webpage.SendChannel() <- message
 
-		case <-webpage.Disconnected:
-			fmt.Println("Browser webpage has disconnected")
-			break loop
+			/* Question 4
+			case <-webpage.Disconnected:
+				fmt.Println("Browser webpage has disconnected")
+				break loop
+			*/
 		}
 	}
 }
 
 func onPeerConnected(peer network.Peer) {
-	messageOutputChannel <- fmt.Sprint(peer, " joined the chat")
-	go network.Dial(peer, chatPort)
+	// Question 2
 }
 
 func onPeerDisconnected(peer network.Peer) {
-	messageOutputChannel <- fmt.Sprint(peer, " left the chat")
+	// Question 2
 }
 
 func readStdin(ch chan string) {

@@ -29,6 +29,8 @@ func ConnectToDirectory(directoryServer string, directoryPort int, localChatPort
 		return
 	}
 
+	fmt.Println("Connected to directory.")
+
 	go listenFromDirectory(conn)
 	connectedToDirectory = true
 	send(conn, "HELLO", strconv.Itoa(chatPort))
@@ -59,7 +61,7 @@ func listenFromDirectory(conn net.Conn) {
 			return
 		}
 
-		fmt.Println(conn.RemoteAddr(), "said :", message)
+		//fmt.Println(conn.RemoteAddr(), "said :", message)
 
 		switch message.Kind {
 		case "PEERS":

@@ -15,7 +15,7 @@ type commandProcessor struct {
 func (processor *commandProcessor) Process(command string) {
 
 	if strings.HasPrefix(command, "/") {
-		processor.messageOutput <- "{CMD} " + command
+		processor.messageOutput <- "[" + processor.peers.GetLocalUsername() + "] " + command
 		command = strings.TrimSpace(command)
 		commandName := strings.SplitN(command, " ", 2)[0]
 		commandParams := ""
@@ -32,7 +32,7 @@ func (processor *commandProcessor) Process(command string) {
 			fmt.Print("Unknown command", commandName)
 		}
 	} else {
-		processor.messageOutput <- "You said: " + command
+		processor.messageOutput <- "[" + processor.peers.GetLocalUsername() + "] " + command
 		processor.peers.SendToAll(network.Message{
 			Kind: "SAY",
 			Data: command,
